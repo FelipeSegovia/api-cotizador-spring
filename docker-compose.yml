@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:13.5
+    container_name: container_cotizador_db_spring
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - '${DB_PORT}:5432'
+    deploy:
+      resources:
+        limits:
+          memory: 400M # Esto limita el recurso para Postgres no ahogue la API
+  nestjs-api:
+    container_name: container_api-cotizador_spring
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '${PORT:-3000}:3000'
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SEED_EMAIL: ${SEED_EMAIL}
+      SEED_PASSWORD: ${SEED_PASSWORD}
+      SEED_NAME: ${SEED_NAME}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+      MAIL_ENABLED: ${MAIL_ENABLED}
+      DOMAIN_URL: ${DOMAIN_URL}
+      DO_SPACES_BUCKET: ${DO_SPACES_BUCKET}
+      DO_SPACES_ENDPOINT: ${DO_SPACES_ENDPOINT}
+      DO_SPACES_REGION: ${DO_SPACES_REGION}
+      DO_SPACES_ACCESS_KEY_ID: ${DO_SPACES_ACCESS_KEY_ID}
+      DO_SPACES_SECRET_ACCESS_KEY: ${DO_SPACES_SECRET_ACCESS_KEY}
+      DO_SPACES_PUBLIC_URL: ${DO_SPACES_PUBLIC_URL}
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          memory: 400M # Esto limita el recurso para la API no ahogue el servidor
+
+volumes:
+  postgres:
