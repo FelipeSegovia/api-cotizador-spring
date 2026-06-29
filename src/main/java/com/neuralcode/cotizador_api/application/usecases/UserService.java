@@ -5,6 +5,7 @@ import com.neuralcode.cotizador_api.application.ports.in.CreateUserUseCase;
 import com.neuralcode.cotizador_api.application.ports.in.GetAllUsersUseCase;
 import com.neuralcode.cotizador_api.application.ports.in.GetUserUseCase;
 import com.neuralcode.cotizador_api.application.ports.out.UserRepositoryPort;
+import com.neuralcode.cotizador_api.domain.exceptions.UserDomainException;
 import com.neuralcode.cotizador_api.domain.models.User;
 import com.neuralcode.cotizador_api.domain.services.UserDomainService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,10 @@ public class UserService implements CreateUserUseCase, GetUserUseCase, GetAllUse
 
     @Override
     public User create(CreateUserCommand command) {
+        if (userRepositoryPort.existsByEmail(command.email())) {
+            throw new UserDomainException("El email ya existe");
+        }
+
         User domainUser = userDomainService.createUser(
                 command.email(),
                 command.password(),

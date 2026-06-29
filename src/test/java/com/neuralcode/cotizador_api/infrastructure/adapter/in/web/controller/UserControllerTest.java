@@ -6,6 +6,7 @@ import com.neuralcode.cotizador_api.application.ports.in.GetUserUseCase;
 import com.neuralcode.cotizador_api.application.dto.CreateUserCommand;
 import com.neuralcode.cotizador_api.domain.models.User;
 import com.neuralcode.cotizador_api.domain.models.UserRole;
+import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.handler.GlobalExceptionHandler;
 import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.dto.user.request.CreateUserRequest;
 import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.mapper.UserWebMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
+@org.springframework.context.annotation.Import(GlobalExceptionHandler.class)
 class UserControllerTest {
 
     @Autowired
@@ -67,16 +69,82 @@ class UserControllerTest {
                 true
         );
         User user = new User("1", "Test Name", "test@example.com", "hash", "123456789", UserRole.COMMON, true, LocalDateTime.now(), LocalDateTime.now());
+        var response = new com.neuralcode.cotizador_api.infrastructure.adapter.in.web.dto.user.response.CreateUserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
 
         when(mapper.toCommand(any(CreateUserRequest.class))).thenReturn(command);
         when(createUserUseCase.create(any(CreateUserCommand.class))).thenReturn(user);
-        when(mapper.toResponse(any())).thenCallRealMethod();
+        when(mapper.toResponse(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("test@example.com"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNameIsMissing() throws Exception {
+        String request = """
+                {
+                  "email": "test@example.com",
+                  "mobilePhone": "123456789",
+                  "password": "password123",
+                  "role": "COMMON",
+                  "isActive": true
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Campo name no puede ir vacío"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNameIsNotAString() throws Exception {
+        String request = """
+                {
+                  "name": {"value": "Test Name"},
+                  "email": "test@example.com",
+                  "mobilePhone": "123456789",
+                  "password": "password123",
+                  "role": "COMMON",
+                  "isActive": true
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Campo name debe ser una cadena de texto"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenEmailFormatIsInvalid() throws Exception {
+        String request = """
+                {
+                  "name": "Test Name",
+                  "email": "correo-invalido",
+                  "mobilePhone": "123456789",
+                  "password": "password123",
+                  "role": "COMMON",
+                  "isActive": true
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Campo email debe tener un formato valido"));
     }
 
     @Test

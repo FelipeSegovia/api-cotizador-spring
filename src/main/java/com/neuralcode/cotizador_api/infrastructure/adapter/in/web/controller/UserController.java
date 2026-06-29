@@ -8,6 +8,7 @@ import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.dto.user.reque
 import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.dto.user.response.CreateUserResponse;
 import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.dto.user.response.GetUserResponse;
 import com.neuralcode.cotizador_api.infrastructure.adapter.in.web.mapper.UserWebMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class UserController {
      */
 
     @PostMapping
-    public ResponseEntity<CreateUserResponse> create(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<CreateUserResponse> create(@Valid @RequestBody CreateUserRequest request) {
         User createdUser = createUserUseCase.create(mapper.toCommand(request));
         // ResponseEntity<> es vacio porque el compilador añade implícitamente el UserResponse
         return new ResponseEntity<>(mapper.toResponse(createdUser), HttpStatus.CREATED);

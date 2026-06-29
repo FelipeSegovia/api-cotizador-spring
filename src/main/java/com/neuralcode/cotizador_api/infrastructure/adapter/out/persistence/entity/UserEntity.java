@@ -20,6 +20,7 @@ public class UserEntity {
     @GeneratedValue(strategy =  GenerationType.UUID)
     private String id;
     private String name;
+    @Column(unique = true, nullable = false)
     private String email;
     @Column(name = "password_hash", nullable = false, length = 32)
     private String passwordHash;

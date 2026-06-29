@@ -19,4 +19,5 @@ public interface UserRepositoryPort {
     User save(User user);
     Optional<User> findById(String id);
     List<User> findAll();
+    boolean existsByEmail(String email);
 }

@@ -22,9 +22,6 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
 
     @Override
     public User save(User user) {
-        if (user.getId() == null) {
-            user.setId(UUID.randomUUID().toString());
-        }
         UserEntity entity = mapper.toEntity(user);
         UserEntity savedEntity = jpaUserRepository.save(entity);
         return mapper.toDomain(savedEntity);
@@ -41,5 +38,10 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         return jpaUserRepository.findAll().stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return jpaUserRepository.existsByEmail(email);
     }
 }
